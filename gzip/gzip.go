@@ -13,9 +13,11 @@ import (
 
 // These compression constants are copied from the compress/gzip package.
 const (
-	encodingGzip = "gzip"
+	encodingGzip     = "gzip"
+	cacheNoTransform = "no-transform"
 
 	headerAcceptEncoding  = "Accept-Encoding"
+	headerCacheControl    = "Cache-Control"
 	headerContentEncoding = "Content-Encoding"
 	headerContentLength   = "Content-Length"
 	headerContentType     = "Content-Type"
@@ -40,7 +42,8 @@ type gzipResponseWriter struct {
 // gzipWriter before the body gets written, otherwise encoding headers
 func (grw *gzipResponseWriter) WriteHeader(code int) {
 	headers := grw.ResponseWriter.Header()
-	if headers.Get(headerContentEncoding) == "" {
+	noTransform := strings.Contains(headers.Get(headerCacheControl), cacheNoTransform)
+	if !noTransform && headers.Get(headerContentEncoding) == "" {
 		headers.Set(headerContentEncoding, encodingGzip)
 		headers.Add(headerVary, headerAcceptEncoding)
 	} else {
